@@ -1,6 +1,7 @@
 rightwristX="";
 rightwristY="";
 scorerightWrist="";
+status="";
 /*created by prashant shukla */
 
 var paddle2 =10,paddle1=10;
@@ -23,14 +24,18 @@ var ball = {
     dy:3
 }
 
+function preload(){
+  ball_touch_paddel=loadSound("ball_touch_paddel.wav");
+  missed=loadSound("missed.wav");
+}
+
 function setup(){
   var canvas =  createCanvas(700,600);
-  canvas.parent('canvas');
-  canvas.hide;
+  canvas.parent("canvas");
   video=createCapture(VIDEO);
   video.size(700,600);
   poseNet=ml5.poseNet(video,modelLoaded);
-  poseNet=on('pose',gotPoses);
+  poseNet.on('pose',gotPoses);
 }
 function modelLoaded(){
   console.log("poseNet is initialized");
@@ -41,54 +46,67 @@ if(results.length>0){
   scoreRightWrist=results[0].pose.keypoints[10].score;
   rightwristX=results[0].pose.rightWrist.x;
   rightwristY=results[0].pose.rightWrist.y;
-  console.log("rightWristx = "+rightWristX+" rightWristy = "+rightWristY);
+  console.log("rightWristx = "+rightwristX+" rightWristy = "+rightwristY);
 }
+}
+
+function startGame(){
+  status="start";
+  document.getElementById("status").innerHTML="Game is Loaded";
+}
+
+function restart(){
+  pcscore=0;
+  playerscore=0;
+  loop()
 }
 
 function draw(){
-image(video,0,0,700,600);
-fill("#FF0000");
-stroke("#FF0000");
-if(scoreRightWrist>0.2){
-  circle(rightWristX,rightWristY,20);
-}
- background(0); 
-
- fill("black");
- stroke("black");
- rect(680,0,20,700);
-
- fill("black");
- stroke("black");
- rect(0,0,20,700);
- 
-   //funtion paddleInCanvas call 
-   paddleInCanvas();
- 
-   //left paddle
-   fill(250,0,0);
-    stroke(0,0,250);
-    strokeWeight(0.5);
-   paddle1Y = mouseY; 
-   rect(paddle1X,paddle1Y,paddle1,paddle1Height,100);
-   
-   
-    //pc computer paddle
-    fill("#FFA500");
-    stroke("#FFA500");
-   var paddle2y =ball.y-paddle2Height/2;  rect(paddle2Y,paddle2y,paddle2,paddle2Height,100);
+  if(status=="start"){
+    image(video,0,0,700,600);
+    fill("#FF0000");
+    stroke("#FF0000");
+    if(scorerightWrist>0.2){
+      circle(rightWristX,rightWristY,20);
+    }
+     background(0); 
     
-    //function midline call
-    midline();
+     fill("black");
+     stroke("black");
+     rect(680,0,20,700);
     
-    //funtion drawScore call 
-   drawScore();
-   
-   //function models call  
-   models();
-   
-   //function move call which in very important
-    move();
+     fill("black");
+     stroke("black");
+     rect(0,0,20,700);
+     
+       //funtion paddleInCanvas call 
+       paddleInCanvas();
+     
+       //left paddle
+       fill(250,0,0);
+        stroke(0,0,250);
+        strokeWeight(0.5);
+       paddle1Y = rightwristY; 
+       rect(paddle1X,paddle1Y,paddle1,paddle1Height,100);
+       
+       
+        //pc computer paddle
+        fill("#FFA500");
+        stroke("#FFA500");
+       var paddle2y =ball.y-paddle2Height/2;  rect(paddle2Y,paddle2y,paddle2,paddle2Height,100);
+        
+        //function midline call
+        midline();
+        
+        //funtion drawScore call 
+       drawScore();
+       
+       //function models call  
+       models();
+       
+       //function move call which in very important
+        move();
+  }
 }
 
 
@@ -141,8 +159,10 @@ function move(){
   if (ball.x-2.5*ball.r/2< 0){
   if (ball.y >= paddle1Y&& ball.y <= paddle1Y + paddle1Height) {
     ball.dx = -ball.dx+0.5; 
+    ball_touch_paddel.play();
   }
   else{
+    missed.play();
     pcscore++;
     reset();
     navigator.vibrate(100);
@@ -156,7 +176,7 @@ if(pcscore ==4){
     stroke("white");
     textSize(25)
     text("Game Over!☹☹",width/2,height/2);
-    text("Reload The Page!",width/2,height/2+30)
+    text("Press restart to play again!",width/2,height/2+30)
     noLoop();
     pcscore = 0;
 }
@@ -179,10 +199,10 @@ function models(){
 
 //this function help to not go te paddle out of canvas
 function paddleInCanvas(){
-  if(mouseY+paddle1Height > height){
-    mouseY=height-paddle1Height;
+  if(rightwristY+paddle1Height > height){
+    rightwristY=height-paddle1Height;
   }
-  if(mouseY < 0){
-    mouseY =0;
+  if(rightwristY < 0){
+    rightwristY =0;
   }  
 }
